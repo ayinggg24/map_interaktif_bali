@@ -17,9 +17,9 @@ def format_nama(nama):
     return f"Kabupaten {nama}"
 
 data_kabupaten = {
-    "Badung": 98, "Gianyar": 100, "Denpasar": 98,
-    "Tabanan": 100, "Buleleng": 99, "Karangasem": 100,
-    "Jembrana": 99, "Bangli": 95, "Klungkung": 100
+    "Badung": 2.5, "Gianyar": 3.8, "Denpasar": 2.1,
+    "Tabanan": 2.8, "Buleleng": 3.3, "Karangasem": 3.5,
+    "Jembrana": 6.1, "Bangli": 3.9, "Klungkung": 3.1
 }
 
 data_detail = {
@@ -70,18 +70,21 @@ data_detail = {
     }
 }
 
+# =========================
+# WARNA
+# =========================
 def get_color(value):
-    if value >= 85:
+    if value >= 30:
         return "#e31a1c"
-    elif value >= 70:
+    elif value >= 20:
         return "#ffd500"
-    elif value >= 50:
+    elif value >= 10:
         return "#3cfd6f"
     else:
         return "#4da6ff"
 
 # =========================
-# SESSION STATE
+# SESSION
 # =========================
 if "selected_kab" not in st.session_state:
     st.session_state.selected_kab = list(data_kabupaten.keys())[0]
@@ -97,12 +100,21 @@ for _, row in bali.iterrows():
     d = data_detail.get(nama)
 
     if d:
-        popup_html = f"""
-        <b>{format_nama(nama)}</b><br><br>
-        <b>D/S:</b> {d['d_s']}<br>
-        <b>Stunting:</b> {d['stunting']}<br>
-        <b>Underweight:</b> {d['underweight']}<br>
-        <b>Wasting:</b> {d['wasting']}<br>
+          popup_html = f"""
+    <div style="font-size:15px; line-height:1.4;">
+    <b>{format_nama(nama)}</b><br><br>
+    D/S: <b>{d['d_s']}</b><br>
+    Stunting: <b>{d['stunting']}</b><br>
+    Underweight: <b>{d['underweight']}</b><br>
+    Wasting: <b>{d['wasting']}</b><br>
+    </div>
+    <div style="font-size:15px; line-height:1.4;">
+    0–5 bln: <b>{d['usia_0_5']}</b><br>
+    6–11 bln: <b>{d['usia_6_11']}</b><br>
+    12–23 bln: <b>{d['usia_12_23']}</b><br>
+    24–35 bln: <b>{d['usia_24_35']}</b><br>
+    36–47 bln: <b>{d['usia_36_47']}</b><br>
+    48–59 bln: <b>{d['usia_48_59']}</b><br>
         """
     else:
         popup_html = f"<b>{format_nama(nama)}</b><br>Nilai: {nilai}%"
@@ -111,9 +123,7 @@ for _, row in bali.iterrows():
         data={
             "type": "Feature",
             "geometry": row.geometry.__geo_interface__,
-            "properties": {
-                "NAME_2": nama
-            }
+            "properties": {"NAME_2": nama}
         },
         style_function=lambda x, val=nilai: {
             "fillColor": get_color(val),
@@ -121,29 +131,53 @@ for _, row in bali.iterrows():
             "weight": 2,
             "fillOpacity": 0.8
         },
-        tooltip=folium.Tooltip(f"{format_nama(nama)} ({nilai}%)"),
+       tooltip=folium.Tooltip(f"{format_nama(nama)} (<b>{nilai}%</b>)"),
         popup=folium.Popup(popup_html, max_width=300)
     )
 
     geo.add_to(m)
 
 # =========================
+# LEGEND STATIS (FIX)
+# =========================
+legend_html = """
+<div style="
+position: fixed; 
+bottom: 25px; left: 20px; width: 200px; 
+background-color: rgba(255,255,255,0.95);
+border-radius: 12px;
+padding: 14px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+font-size: 14px;
+color: black;
+z-index: 99999;
+border: 1px solid #ddd;
+">
+
+<b>Kategori Presentase Stunting</b><br><br>
+
+<div><span style="background:#4da6ff;width:18px;height:18px;display:inline-block;"></span> Rendah <b>(2.5%–10%)</b></div>
+<div><span style="background:#3cfd6f;width:18px;height:18px;display:inline-block;"></span> Sedang <b>(10%–19%)</b></div>
+<div><span style="background:#ffd500;width:18px;height:18px;display:inline-block;"></span> Tinggi <b>(20%–29%)</b></div>
+<div><span style="background:#e31a1c;width:18px;height:18px;display:inline-block;"></span> Sangat Tinggi <b>(≥30%)</b></b></div>
+
+</div>
+"""
+m.get_root().html.add_child(folium.Element(legend_html))
+
+# =========================
 # UI
 # =========================
 st.markdown("""
 <h3>BALITA STUNTING PER KELOMPOK UMUR<br>
-HASIL PENGUKURAN NOVEMBER 2025 - BALI</h3>
+HASIL PENGUKURAN  NOVEMBER 2025 DI PROVINSI BALI</h3>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([2.5, 1])
 
-# =========================
-# MAP + CLICK HANDLER (FIXED)
-# =========================
 with col1:
     map_data = st_folium(m, width=700, height=550, key="map")
 
-    # Ambil NAME_2 langsung dari last_active_drawing -> properties
     if map_data and map_data.get("last_active_drawing"):
         props = map_data["last_active_drawing"].get("properties", {})
         nama_kab = props.get("NAME_2")
@@ -152,36 +186,134 @@ with col1:
                 st.session_state.selected_kab = nama_kab
                 st.rerun()
 
-# =========================
-# SIDEBAR DETAIL
-# =========================
+                st.markdown("""
+
+""", unsafe_allow_html=True)
+
 with col2:
-    st.subheader("📈 Detail Kabupaten / Kota")
+    st.subheader("📈Hasil Pengukuran Balita Stunting Kabupaten / Kota")
 
     kab = st.session_state.selected_kab
     nilai = data_kabupaten.get(kab, 0)
 
     st.markdown(f"### {format_nama(kab)}")
-    st.markdown(f"**Nilai:** {nilai}%")
+    st.markdown(f"**Presentase :**")
+
+    
 
     d = data_detail.get(kab)
 
-    if d:
-        st.markdown(f"""
-        **D/S:** {d['d_s']}  
-        **Stunting:** {d['stunting']}  
-        **Underweight:** {d['underweight']}  
-        **Wasting:** {d['wasting']}  
-        **Total Balita:** {d['total_balita']}  
+    # fungsi bar dinamis
+    def bar(val, max_val=100):
+        try:
+            num = float(str(val).replace("%", ""))
+        except:
+            num = 0
+        width = (num / max_val) * 100
+        return f"""
+        <div style='flex:1; background:#eee; margin:0 10px; height:6px;'>
+            <div style='width:{width}%; background:#4da6ff; height:6px;'></div>
+        </div>
+        """
 
-        **Stunting per usia:**
-        - 0–5 bln: {d['usia_0_5']}
-        - 6–11 bln: {d['usia_6_11']}
-        - 12–23 bln: {d['usia_12_23']}
-        - 24–35 bln: {d['usia_24_35']}
-        - 36–47 bln: {d['usia_36_47']}
-        - 48–59 bln: {d['usia_48_59']}
-        """)
-# =========================
-# GREY LUCUUU
-# =========================
+    if d:
+         st.markdown(f"""
+<div style="margin-top:-20px; padding-top:0;">
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>D/S</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{int(d['d_s'].replace('%',''))}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span>{d['d_s']}</span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>Stunting</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{float(d['stunting'].replace('%',''))*10}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span>{d['stunting']}</span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>Underweight</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{float(d['underweight'].replace('%',''))*10}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span>{d['underweight']}</span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>Wasting</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{float(d['wasting'].replace('%',''))*10}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span>{d['wasting']}</span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span>Total</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['total_balita']/1200*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span>{d['total_balita']}</span>
+</div>
+
+
+
+<div style="margin-top:15px;">
+<b>Kelompok Umur Balita Stunting : </b>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 0-5</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_0_5']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span><b>{d['usia_0_5']}</b></span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 6-11</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_6_11']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span><b>{d['usia_6_11']}</b></span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 12-23</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_12_23']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span><b>{d['usia_12_23']}</b></span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 24-35</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_24_35']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span><b>{d['usia_24_35']}</b></span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 36-47</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_36_47']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></b></div>
+</div>
+<span><b>{d['usia_36_47']}</b></span>
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
+<span>Usia 48-59</span>
+<div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
+<div style="width:{d['usia_48_59']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+</div>
+<span><b>{d['usia_48_59']}</b></span>
+</div>
+
+
+</div>
+""", unsafe_allow_html=True)
