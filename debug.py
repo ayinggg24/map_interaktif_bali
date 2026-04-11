@@ -42,7 +42,7 @@ for _, row in bali.iterrows():
             "weight": 2,
             "fillOpacity": 0.8
         },
-        tooltip=folium.Tooltip(nama),  # tooltip = nama kabupaten saja, biar gampang di-parse
+        tooltip=folium.Tooltip(nama),  
         name=nama
     )
     geo.add_to(m)
