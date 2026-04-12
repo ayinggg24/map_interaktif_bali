@@ -122,6 +122,7 @@ m = folium.Map(location=[-8.4, 115.1], zoom_start=9, tiles="cartodbpositron")
 for feature in bali["features"]:
     nama = feature["properties"]["NAME_2"]
     geom = feature["geometry"]
+      d = data_detail.get(nama)
 
     if d:
           popup_html = f"""
