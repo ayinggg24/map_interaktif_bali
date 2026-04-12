@@ -2,8 +2,12 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import json
+import os
 
-with open("shapes/bali_only.geojson", "r") as f:
+BASE_DIR = os.path.dirname(__file__)
+file_path = os.path.join(BASE_DIR, "bali_only.geojson")
+
+with open(file_path, "r") as f:
     bali = json.load(f)
 
 st.set_page_config(layout="wide")
