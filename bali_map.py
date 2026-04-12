@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import st_folium
 import json
 
-with open("shapes/bali.geojson", "r") as f:
+with open("shapes/bali_only.geojson", "r") as f:
     bali = json.load(f)
 
 st.set_page_config(layout="wide")
