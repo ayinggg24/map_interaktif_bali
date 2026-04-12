@@ -164,10 +164,10 @@ for feature in bali["features"]:
 
     geo.add_to(m)
 
-   geom = feature["geometry"]
-   center = shape(geom).centroid
+    geom = feature["geometry"]
+    center = shape(geom).centroid
 
-folium.Marker(
+    folium.Marker(
     location=[center.y, center.x],
     icon=folium.DivIcon(
         html=f"""
