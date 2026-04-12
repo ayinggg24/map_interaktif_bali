@@ -147,7 +147,7 @@ for feature in bali["features"]:
     geo = folium.GeoJson(
         data={
             "type": "Feature",
-            "geometry": row.geometry.__geo_interface__,
+            "geometry": geom,
             "properties": {"NAME_2": nama}
         },
         style_function=lambda x, val=nilai: {
