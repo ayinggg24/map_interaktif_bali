@@ -10,19 +10,35 @@ st.set_page_config(layout="wide")
 # =========================
 gdf = gpd.read_file("shapes/gadm41_IDN_2.shp")
 bali = gdf[gdf["NAME_1"] == "Bali"].reset_index(drop=True)
-
 def format_nama(nama):
-    if nama == "Denpasar":
+    if nama == "Bali":
+        return "Provinsi Bali"
+    elif nama == "Denpasar":
         return "Kota Denpasar"
-    return f"Kabupaten {nama}"
+    else:
+        return f"Kabupaten {nama}"
 
 data_kabupaten = {
+    
     "Badung": 2.5, "Gianyar": 3.8, "Denpasar": 2.1,
     "Tabanan": 2.8, "Buleleng": 3.3, "Karangasem": 3.5,
     "Jembrana": 6.1, "Bangli": 3.9, "Klungkung": 3.1
 }
 
 data_detail = {
+       "Bali": {
+        "d_s": "99%",
+        "stunting": "3.4%",
+        "underweight": "3.4%",
+        "wasting": "1.5%",
+        "total_balita": 6077,
+        "usia_0_5": 297,
+        "usia_6_11": 273,
+        "usia_12_23": 1114,
+        "usia_24_35": 1468,
+        "usia_36_47": 1438,
+        "usia_48_59": 1487
+    },
     "Jembrana": {
         "d_s": "99%", "stunting": "6.1%", "underweight": "4.1%", "wasting": "1.6%",
         "total_balita": 917, "usia_0_5": 50, "usia_6_11": 40, "usia_12_23": 158,
@@ -87,7 +103,8 @@ def get_color(value):
 # SESSION
 # =========================
 if "selected_kab" not in st.session_state:
-    st.session_state.selected_kab = list(data_kabupaten.keys())[0]
+    st.session_state.selected_kab = "Bali"
+    
 
 # =========================
 # MAP
@@ -137,6 +154,24 @@ for _, row in bali.iterrows():
 
     geo.add_to(m)
 
+    folium.Marker(
+    location=[row.geometry.centroid.y, row.geometry.centroid.x],
+    icon=folium.DivIcon(
+        html=f"""
+        <div style="
+            font-size:12px;
+            color:black;
+            font-weight:bold;
+            text-align:left;
+            white-space:nowrap;
+            text-shadow: 2px 2px 2px white;
+        ">
+        {nama}
+        </div>
+        """
+    )
+).add_to(m)
+
 # =========================
 # LEGEND STATIS (FIX)
 # =========================
@@ -168,6 +203,8 @@ m.get_root().html.add_child(folium.Element(legend_html))
 # =========================
 # UI
 # =========================
+
+
 st.markdown("""
 <h3>BALITA STUNTING PER KELOMPOK UMUR<br>
 HASIL PENGUKURAN  NOVEMBER 2025 DI PROVINSI BALI</h3>
@@ -187,6 +224,7 @@ with col1:
                 st.rerun()
 
                 st.markdown("""
+
 
 """, unsafe_allow_html=True)
 
@@ -255,11 +293,10 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center;">
 <span>Total</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['total_balita']/1200*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['total_balita']/6000*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span>{d['total_balita']}</span>
 </div>
-
 
 
 <div style="margin-top:15px;">
@@ -269,7 +306,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 0-5</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_0_5']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['usia_0_5']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span><b>{d['usia_0_5']}</b></span>
 </div>
@@ -277,7 +314,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 6-11</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_6_11']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['usia_6_11']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span><b>{d['usia_6_11']}</b></span>
 </div>
@@ -285,7 +322,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 12-23</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_12_23']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['usia_12_23']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span><b>{d['usia_12_23']}</b></span>
 </div>
@@ -293,7 +330,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 24-35</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_24_35']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['usia_24_35']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span><b>{d['usia_24_35']}</b></span>
 </div>
@@ -301,7 +338,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 36-47</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_36_47']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></b></div>
+<div style="width:{d['usia_36_47']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></b></div>
 </div>
 <span><b>{d['usia_36_47']}</b></span>
 </div>
@@ -309,7 +346,7 @@ with col2:
 <div style="display:flex; justify-content:space-between; align-items:center; ,margin-top: ">
 <span>Usia 48-59</span>
 <div style="flex:1; height:6px; background:#eee; margin:0 10px; border-radius:5px;">
-<div style="width:{d['usia_48_59']/300*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
+<div style="width:{d['usia_48_59']/1500*100}%; height:6px; background:#4da6ff; border-radius:5px;"></div>
 </div>
 <span><b>{d['usia_48_59']}</b></span>
 </div>
