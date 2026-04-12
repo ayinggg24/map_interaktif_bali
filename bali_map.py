@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import st_folium
 import json
 import os
+from shapely.geometry import shape
 
 BASE_DIR = os.path.dirname(__file__)
 file_path = os.path.join(BASE_DIR, "bali_only.geojson")
@@ -163,16 +164,17 @@ for feature in bali["features"]:
 
     geo.add_to(m)
 
-    folium.Marker(
-    location=[row.geometry.centroid.y, row.geometry.centroid.x],
+   geom = feature["geometry"]
+   center = shape(geom).centroid
+
+folium.Marker(
+    location=[center.y, center.x],
     icon=folium.DivIcon(
         html=f"""
         <div style="
             font-size:12px;
             color:black;
             font-weight:bold;
-            text-align:left;
-            white-space:nowrap;
             text-shadow: 2px 2px 2px white;
         ">
         {nama}
@@ -180,7 +182,6 @@ for feature in bali["features"]:
         """
     )
 ).add_to(m)
-
 # =========================
 # LEGEND STATIS (FIX)
 # =========================
