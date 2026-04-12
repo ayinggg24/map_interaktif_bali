@@ -1,19 +1,14 @@
 import streamlit as st
-import json
+import geopandas as gpd
 import folium
 from streamlit_folium import st_folium
-import os
 
 st.set_page_config(layout="wide")
 
 # =========================
 # LOAD DATA SEK
 # =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-geo_path = os.path.join(BASE_DIR, "bali_only.geojson")
-with open(geo_path, "r", encoding="utf-8") as f:
-    gdf = json.load(f)
-gdf = gdf["features"]
+gdf = gpd.read_file("shapes/gadm41_IDN_2.shp")
 bali = gdf[gdf["NAME_1"] == "Bali"].reset_index(drop=True)
 
 def format_nama(nama):
@@ -118,12 +113,8 @@ if "selected_kab" not in st.session_state:
 # =========================
 m = folium.Map(location=[-8.4, 115.1], zoom_start=9, tiles="cartodbpositron")
 
-for row in gdf["features"]:
-    props = row["properties"]
-    geom = row["geometry"]
-
-    nama = props["NAME_2"]
-
+for _, row in bali.iterrows():
+    nama = row["NAME_2"]
     nilai = data_kabupaten.get(nama, 0)
     d = data_detail.get(nama)
 
@@ -150,7 +141,7 @@ for row in gdf["features"]:
     geo = folium.GeoJson(
         data={
             "type": "Feature",
-            "geometry": geom,
+            "geometry": row.geometry.__geo_interface__,
             "properties": {"NAME_2": nama}
         },
         style_function=lambda x, val=nilai: {
