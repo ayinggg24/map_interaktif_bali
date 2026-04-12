@@ -1,17 +1,15 @@
 import streamlit as st
+import geopandas as gpd
 import folium
 from streamlit_folium import st_folium
-import os
 
 st.set_page_config(layout="wide")
 
 # =========================
-# LOAD DATA GEOJSON
+# LOAD DATA SEK
 # =========================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-geo_path = os.path.join(BASE_DIR, "bali_only.geojson")
-
+gdf = gpd.read_file("shapes/gadm41_IDN_2.shp")
+bali = gdf[gdf["NAME_1"] == "Bali"].reset_index(drop=True)
 
 def format_nama(nama):
     if nama == "Bali":
@@ -115,27 +113,27 @@ if "selected_kab" not in st.session_state:
 # =========================
 m = folium.Map(location=[-8.4, 115.1], zoom_start=9, tiles="cartodbpositron")
 
-for _, row in gdf.iterrows():
+for _, row in bali.iterrows():
     nama = row["NAME_2"]
     nilai = data_kabupaten.get(nama, 0)
     d = data_detail.get(nama)
 
     if d:
-        popup_html = f"""
-        <div style="font-size:14px; line-height:1.4;">
-            <b>{format_nama(nama)}</b><br><br>
-            D/S: <b>{d['d_s']}</b><br>
-            Stunting: <b>{d['stunting']}</b><br>
-            Underweight: <b>{d['underweight']}</b><br>
-            Wasting: <b>{d['wasting']}</b><br>
-            <hr>
-            0–5 bln: <b>{d['usia_0_5']}</b><br>
-            6–11 bln: <b>{d['usia_6_11']}</b><br>
-            12–23 bln: <b>{d['usia_12_23']}</b><br>
-            24–35 bln: <b>{d['usia_24_35']}</b><br>
-            36–47 bln: <b>{d['usia_36_47']}</b><br>
-            48–59 bln: <b>{d['usia_48_59']}</b><br>
-        </div>
+          popup_html = f"""
+    <div style="font-size:15px; line-height:1.4;">
+    <b>{format_nama(nama)}</b><br><br>
+    D/S: <b>{d['d_s']}</b><br>
+    Stunting: <b>{d['stunting']}</b><br>
+    Underweight: <b>{d['underweight']}</b><br>
+    Wasting: <b>{d['wasting']}</b><br>
+    </div>
+    <div style="font-size:15px; line-height:1.4;">
+    0–5 bln: <b>{d['usia_0_5']}</b><br>
+    6–11 bln: <b>{d['usia_6_11']}</b><br>
+    12–23 bln: <b>{d['usia_12_23']}</b><br>
+    24–35 bln: <b>{d['usia_24_35']}</b><br>
+    36–47 bln: <b>{d['usia_36_47']}</b><br>
+    48–59 bln: <b>{d['usia_48_59']}</b><br>
         """
     else:
         popup_html = f"<b>{format_nama(nama)}</b><br>Nilai: {nilai}%"
@@ -152,27 +150,29 @@ for _, row in gdf.iterrows():
             "weight": 2,
             "fillOpacity": 0.8
         },
-        tooltip=folium.Tooltip(f"{format_nama(nama)} ({nilai}%)"),
+       tooltip=folium.Tooltip(f"{format_nama(nama)} (<b>{nilai}%</b>)"),
         popup=folium.Popup(popup_html, max_width=300)
     )
 
     geo.add_to(m)
 
     folium.Marker(
-        location=[row.geometry.centroid.y, row.geometry.centroid.x],
-        icon=folium.DivIcon(
-            html=f"""
-            <div style="
-                font-size:11px;
-                color:black;
-                font-weight:bold;
-                text-shadow: 1px 1px 2px white;
-            ">
-            {nama}
-            </div>
-            """
-        )
-    ).add_to(m)
+    location=[row.geometry.centroid.y, row.geometry.centroid.x],
+    icon=folium.DivIcon(
+        html=f"""
+        <div style="
+            font-size:12px;
+            color:black;
+            font-weight:bold;
+            text-align:left;
+            white-space:nowrap;
+            text-shadow: 2px 2px 2px white;
+        ">
+        {nama}
+        </div>
+        """
+    )
+).add_to(m)
 
 # =========================
 # LEGEND STATIS (FIX)
