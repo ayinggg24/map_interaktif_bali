@@ -2,7 +2,3 @@ streamlit
 folium
 streamlit-folium
 pandas
-geopandas==0.14.4
-shapely
-pyproj
-fiona==1.9.6
